@@ -23,8 +23,6 @@ conda create -n compress python=3.7
 conda activate compress
 pip install compressai
 pip install pybind11
-git clone https://github.com/stm233/image-compression-with-swin-transformer image-compression
-cd image-compression
 pip install -e .
 pip install -e '.[dev]'
 ```
