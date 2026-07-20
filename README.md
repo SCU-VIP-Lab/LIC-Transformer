@@ -23,6 +23,11 @@ This method high depend on [CompressAI](https://github.com/InterDigitalInc/Compr
 ## Usage
 
 ### Dataset
+| Split | Source | Link |
+|-------|--------|------|
+| Training set | [Open Images](https://storage.googleapis.com/openimages/web/index.html) training set | [Download](https://storage.googleapis.com/openimages/web/download_v7.html) |
+| Test set | [Open Images](https://storage.googleapis.com/openimages/web/index.html) validation set | [Download](https://storage.googleapis.com/openimages/web/download_v7.html) |
+
 
 #### Data Structure
 Please put the training and validation data into the right path, or you need to fix the datasets/utils.py
