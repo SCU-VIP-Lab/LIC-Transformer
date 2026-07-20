@@ -65,4 +65,41 @@ Eg.
 python train.py -m stf8 -d /data/Dataset/openimages/ --lambda 0.025 --batch_size 24
 ```
 
+### Testing / Evaluation
+
+Use `compressai/utils/eval_model/__main__.py` to evaluate a trained checkpoint on a folder of images. It reports average PSNR, MS-SSIM, and bpp, and can save reconstructed images.
+
+Main arguments:
+
+```
+-d /path/to/testset/          # folder of images (.png / .jpg / ...)
+-a stf8                       # model architecture
+-p ./save/23.ckpt             # checkpoint path
+-r ./reconstruction           # where to save reconstructed images
+--entropy-estimation          # use entropy estimation (default: True)
+--cuda                        # run on GPU if available (default: True)
+-v                            # verbose mode
+```
+
+Example:
+
+```
+python -m compressai.utils.eval_model \
+  -d /data/Dataset/openimages/test/data/ \
+  -a stf8 \
+  -p ./save/23.ckpt \
+  -r ./reconstruction \
+  -v
+```
+
+Or equivalently:
+
+```
+python compressai/utils/eval_model/__main__.py \
+  -d /data/Dataset/openimages/test/data/ \
+  -a stf8 \
+  -p ./save/23.ckpt \
+  -r ./reconstruction \
+  -v
+```
 
