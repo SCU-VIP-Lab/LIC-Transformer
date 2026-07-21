@@ -51,7 +51,7 @@ Please put the training and validation data into the right path, or you need to 
 
 ### Pre-trained Model
 
-[checkpoints]([https://drive.google.com/file/d/1tRsx-ek8O2lXlcLdMnQ9q5sD-V_4nuGQ/view?usp=drive_link](https://drive.google.com/drive/folders/14stuBb9OBYodMLfj7WL7E1cpVfhfXFWu?usp=drive_link)) 
+[checkpoints](https://drive.google.com/drive/folders/14stuBb9OBYodMLfj7WL7E1cpVfhfXFWu?usp=drive_link) 
 
 
 
