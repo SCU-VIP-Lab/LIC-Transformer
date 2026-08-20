@@ -51,7 +51,7 @@ Please put the training and validation data into the right path, or you need to 
 
 ### Pre-trained Model
 
-[checkpoints]([https://drive.google.com/drive/folders/14stuBb9OBYodMLfj7WL7E1cpVfhfXFWu?usp=drive_link](https://huggingface.co/SCU-VIP-Lab/Learned-image-compression-with-transformers)) 
+[checkpoints](https://huggingface.co/SCU-VIP-Lab/Learned-image-compression-with-transformers/tree/main) 
 
 
 
