@@ -42,10 +42,14 @@ class ImageFolder(Dataset):
     """
 
     def __init__(self, root, transform=None, split="train"):
-        splitdir = Path(root) / split / 'data'
+        splitdir = Path(root) / split / "data"
+        if not splitdir.is_dir():
+            splitdir = Path(root) / split / "original"
 
         if not splitdir.is_dir():
-            raise RuntimeError(f'Invalid directory "{root}"')
+            raise RuntimeError(
+                f'Invalid directory "{root}": expected {split}/data or {split}/original'
+            )
 
         self.samples = [f for f in splitdir.iterdir() if f.is_file()]
 

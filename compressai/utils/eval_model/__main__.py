@@ -132,13 +132,14 @@ def inference(model, x, filename, recon_path):
 
 
 @torch.no_grad()
-def inference_entropy_estimation(model, x, context, filename, recon_path):
-    input_image = x['img']
-    input_image = input_image.unsqueeze(0)
+def inference_entropy_estimation(model, x, filename, recon_path, bpp_only=False):
+    if not os.path.exists(recon_path):
+        os.makedirs(recon_path)
 
-    num_pixels = input_image.size(0) * input_image.size(2) * input_image.size(3)
+    x = x.unsqueeze(0)
+    num_pixels = x.size(0) * x.size(2) * x.size(3)
 
-    h, w = input_image.size(2), input_image.size(3)
+    h, w = x.size(2), x.size(3)
     p = 64  # maximum 6 strides of 2
     new_h = (h + p - 1) // p * p
     new_w = (w + p - 1) // p * p
@@ -147,14 +148,12 @@ def inference_entropy_estimation(model, x, context, filename, recon_path):
     padding_top = (new_h - h) // 2
     padding_bottom = new_h - h - padding_top
     x_padded = F.pad(
-        input_image,
+        x,
         (padding_left, padding_right, padding_top, padding_bottom),
         mode="constant",
         value=0,
     )
-    # print(filename,x.shape,x_padded.shape)
     start = time.time()
-
 
     out_net = model.forward(x_padded)
 
@@ -162,40 +161,38 @@ def inference_entropy_estimation(model, x, context, filename, recon_path):
     grid_img = F.pad(
         grid_img, (-padding_left, -padding_right, -padding_top, -padding_bottom)
     )
-    
+
     elapsed_time = time.time() - start
 
-    
     bpp = sum(
         (torch.log(likelihoods).sum() / (-math.log(2) * num_pixels))
         for likelihoods in out_net["likelihoods"].values()
     )
 
-    # ms_ssim(x, grid_img, data_range=1.0)
-    print(filename,"bpp", bpp.item(),psnr(x, grid_img),ms_ssim(x, grid_img, data_range=1.0))
-    # print('num_pixels',num_pixels)
-    # for likelihoods in out_net["likelihoods"].values():
-    #     tmpBPP = torch.log(likelihoods).sum() / (-math.log(2) * num_pixels)
-    #     print(tmpBPP)
-
-    reconstruct(grid_img, filename, recon_path)
-
-    return {
-        "psnr": psnr(x, grid_img), # out_net["x_hat"]
-        "ms-ssim": ms_ssim(x, grid_img, data_range=1.0).item(),
+    metrics = {
         "bpp": bpp.item(),
         "encoding_time": elapsed_time / 2.0,  # broad estimation
         "decoding_time": elapsed_time / 2.0,
     }
+    if not bpp_only:
+        metrics["psnr"] = psnr(x, grid_img)
+        metrics["ms-ssim"] = ms_ssim(x, grid_img, data_range=1.0).item()
+        print(filename, "bpp", metrics["bpp"], metrics["psnr"], metrics["ms-ssim"])
+    else:
+        print(filename, "bpp", metrics["bpp"])
+
+    reconstruct(grid_img, filename, recon_path)
+    return metrics
 
 
 def load_checkpoint(arch: str, checkpoint_path: str) -> nn.Module:
-    state_dict = load_state_dict(torch.load(checkpoint_path)['state_dict'])
+    map_location = "cuda:0" if torch.cuda.is_available() else "cpu"
+    state_dict = load_state_dict(torch.load(checkpoint_path, map_location=map_location)["state_dict"])
     return models[arch].from_state_dict(state_dict).eval()
     # return models[arch]().eval()
 
 
-def eval_model(model, filepaths, entropy_estimation=True, half=False, recon_path='reconstruction'):
+def eval_model(model, filepaths, entropy_estimation=True, half=False, recon_path='reconstruction', bpp_only=False):
     device = next(model.parameters()).device
     metrics = defaultdict(float)
 
@@ -208,7 +205,7 @@ def eval_model(model, filepaths, entropy_estimation=True, half=False, recon_path
                 x = x.half()
             rv = inference(model, x, _filename, recon_path)
         else:
-            rv = inference_entropy_estimation(model, x , _filename, recon_path)
+            rv = inference_entropy_estimation(model, x, _filename, recon_path, bpp_only=bpp_only)
         for k, v in rv.items():
             metrics[k] += v
     for k, v in metrics.items():
@@ -254,6 +251,11 @@ def setup_args():
         help="use evaluated entropy estimation (no entropy coding)",
     )
     parent_parser.add_argument(
+        "--bpp-only",
+        action="store_true",
+        help="only report bpp (skip PSNR and MS-SSIM)",
+    )
+    parent_parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -289,13 +291,6 @@ def main(argv):
     log_fmt = "\rEvaluating {run:s}"
 
     results = defaultdict(list)
-    model = load_func(*opts, runs)
-    if args.cuda and torch.cuda.is_available():
-        model = model.to("cuda:0")
-
-    model.update(force=True)
-
-    # metrics = eval_model(model, filepaths, args.entropy_estimation, args.half, args.recon_path)
     for run in runs:
         if args.verbose:
             sys.stderr.write(log_fmt.format(*opts, run=run))
@@ -306,7 +301,14 @@ def main(argv):
 
         model.update(force=True)
 
-        metrics = eval_model(model, filepaths, args.entropy_estimation, args.half, args.recon_path)
+        metrics = eval_model(
+            model,
+            filepaths,
+            args.entropy_estimation,
+            args.half,
+            args.recon_path,
+            bpp_only=args.bpp_only,
+        )
         for k, v in metrics.items():
             results[k].append(v)
 

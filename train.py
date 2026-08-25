@@ -14,6 +14,7 @@
 
 import argparse
 import math
+import os
 import random
 import shutil
 import sys
@@ -52,8 +53,8 @@ class RateDistortionLoss(nn.Module):
             for likelihoods in output["likelihoods"].values()
         )
         out["mse_loss"] = self.mse(output["x_hat"], input)
-
-        out["loss"] = out["bpp_loss"] + self.lmbda * out["mse_loss"]
+        # CompressAI scale: images are in [0, 1], so 255**2 puts MSE on 8-bit scale.
+        out["loss"] = out["bpp_loss"] + self.lmbda * 255 ** 2 * out["mse_loss"]
 
         return out
 
@@ -187,12 +188,12 @@ def test_epoch(epoch, test_dataloader, model, criterion):
 
     print(
         f"Test epoch {epoch}: Average losses:"
-        f"\tLoss: {loss.avg[0]:.3f} |"
-        f"\tMSE loss: {mse_loss.avg * 255 :.3f} |"
-        f"\tBpp loss: {bpp_loss.avg:.2f} |"
-        f"\tAux loss: {aux_loss.avg:.2f}\n"
+        f"\tLoss: {loss.avg.item():.3f} |"
+        f"\tMSE loss: {mse_loss.avg.item() * 255:.3f} |"
+        f"\tBpp loss: {bpp_loss.avg.item():.2f} |"
+        f"\tAux loss: {aux_loss.avg.item():.2f}\n"
     )
-    return loss.avg
+    return loss.avg.item()
 
 
 def save_checkpoint(state, is_best, filename):
@@ -261,7 +262,7 @@ def parse_args(argv):
     parser.add_argument(
         "--patch-size",
         type=int,
-        nargs=3,
+        nargs=2,
         default=(256, 256),
         help="Size of the patches to be cropped (default: %(default)s)",
     )
@@ -329,6 +330,7 @@ def main(argv):
     net = net.to(device)
 
     print('GPU:',torch.cuda.device_count())
+    os.makedirs(args.save_path, exist_ok=True)
 
     optimizer, aux_optimizer = configure_optimizers(net, args)
     lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min", factor=0.3, patience=4)
