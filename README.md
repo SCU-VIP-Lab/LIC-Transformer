@@ -30,24 +30,31 @@ pip install -e '.[dev]'
 ## Usage
 
 ### Dataset
-| Split | Source | Link |
-|-------|--------|------|
-| Training set | [Open Images](https://storage.googleapis.com/openimages/web/index.html) training set | [Download](https://storage.googleapis.com/openimages/web/download_v7.html) |
-| Test set | [Open Images](https://storage.googleapis.com/openimages/web/index.html) validation set | [Download](https://storage.googleapis.com/openimages/web/download_v7.html) |
 
+| Split | Dataset | Download |
+|-------|---------|----------|
+| Training | [Open Images](https://storage.googleapis.com/openimages/web/index.html) | [Download page](https://storage.googleapis.com/openimages/web/download_v7.html) |
+| Test | [Kodak](https://r0k.us/graphics/kodak/) (24 images, `kodim01.png`–`kodim24.png`) | [Download images](https://r0k.us/graphics/kodak/) |
+| Test | [Tecnick](https://testimages.org/) TESTIMAGES (SAMPLING 1200 RGB) | [Download ZIP](https://sourceforge.net/projects/testimages/files/OLD/OLD_SAMPLING/testimages.zip/download) |
+| Test | [CLIC](https://archive.compression.cc/) professional set | ([test](https://archive.compression.cc/2021/tasks/index.html) links on the page) |
 
-#### Data Structure
-Please put the training and validation data into the right path, or you need to fix the datasets/utils.py
+#### Training data structure
+Please put the training data into the right path, or you need to fix `datasets/utils.py`.
 
 - rootdir/
     - train/
         - data/   
             - img000.png
             - img001.png
-    - test/
-        - data/  
-            - img000.png
-            - img001.png
+
+#### Test data
+Evaluation (`eval_model`) takes a **flat folder of images** via `-d` (not the train `root/train/data` layout). After downloading, point `-d` to the folder that directly contains the PNG/JPG files, for example:
+
+| Dataset | Example local path after download |
+|---------|-----------------------------------|
+| Kodak (kodim) | `/data/Dataset/kodim` |
+| Tecnick | `/data/Dataset/tecnick` |
+| CLIC | `/data/Dataset/CLIC` |
 
 ### Pre-trained Model
 
@@ -79,39 +86,16 @@ python train.py -m stf8 -d /data/Dataset/openimages/ --lambda 0.025 --batch_size
 
 ### Testing / Evaluation
 
-Use `compressai/utils/eval_model/__main__.py` to evaluate a trained checkpoint on a folder of images. It reports average PSNR, MS-SSIM, and bpp, and can save reconstructed images.
+Use `compressai.utils.eval_model` to evaluate a trained checkpoint on a folder of images (Kodak / Tecnick / CLIC). It reports average PSNR, MS-SSIM, and bpp, and can save reconstructed images.
 
-Main arguments:
+Example (Kodak):
 
-```
--d /path/to/testset/          # folder of images (.png / .jpg / ...)
--a stf8                       # model architecture
--p ./save/23.ckpt             # checkpoint path
--r ./reconstruction           # where to save reconstructed images
---entropy-estimation          # use entropy estimation (default: True)
---cuda                        # run on GPU if available (default: True)
--v                            # verbose mode
-```
-
-Example:
-
-```
+```bash
 python -m compressai.utils.eval_model \
-  -d /data/Dataset/openimages/test/data/ \
+  -d /data/Dataset/kodim \
   -a stf8 \
-  -p ./save/23.ckpt \
-  -r ./reconstruction \
-  -v
-```
-
-Or equivalently:
-
-```
-python compressai/utils/eval_model/__main__.py \
-  -d /data/Dataset/openimages/test/data/ \
-  -a stf8 \
-  -p ./save/23.ckpt \
-  -r ./reconstruction \
+  -p ./checkpoints/save1.ckpt \
+  -r ./reconstruction_kodim \
   -v
 ```
 
