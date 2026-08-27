@@ -35,8 +35,15 @@ pip install -e '.[dev]'
 |-------|---------|----------|
 | Training | [Open Images](https://storage.googleapis.com/openimages/web/index.html) | [Download page](https://storage.googleapis.com/openimages/web/download_v7.html) |
 | Test | [Kodak](https://r0k.us/graphics/kodak/) (24 images, `kodim01.png`–`kodim24.png`) | [Download images](https://r0k.us/graphics/kodak/) |
-| Test | [Tecnick](https://testimages.org/) TESTIMAGES (SAMPLING 1200 RGB) | [Download ZIP](https://sourceforge.net/projects/testimages/files/OLD/OLD_SAMPLING/testimages.zip/download) |
-| Test | [CLIC](https://archive.compression.cc/) professional set | ([test](https://archive.compression.cc/2021/tasks/index.html) links on the page) |
+| Test | [Tecnick](https://testimages.org/sampling/) TESTIMAGES SAMPLING (40 images, **1200×1200**, 8-bit RGB, shift **`T01R01`**) | [1200×1200 8BIT RGB pack](https://sourceforge.net/projects/testimages/files/SAMPLING/8BIT/RGB/SAMPLING_8BIT_RGB_1200x1200.tar.bz2/download) |
+| Test | [CLIC](https://www.compression.cc/) **2020 professional validation** (41 images, mixed resolution, typically up to 2048 on the long side) | [professional_valid_2020.zip](https://data.vision.ee.ethz.ch/cvl/clic/professional_valid_2020.zip) |
+
+**Tecnick note.** Official reference images are 2400×2400; the pack above is the factor-2 resize to 1200×1200. That archive contains **9 shift folders** (`C00C00`, `T01R01`, `B01C00`, …). We evaluate on the **`T01R01`** subset only (40 PNGs named like `img_1200x1200_3x8bit_T01R01_RGB_*.png`). After download:
+
+```bash
+tar -xjf SAMPLING_8BIT_RGB_1200x1200.tar.bz2
+# keep only the T01R01 folder (or copy its 40 PNGs into a flat directory for -d)
+```
 
 #### Training data structure
 Please put the training data into the right path, or you need to fix `datasets/utils.py`.
@@ -53,8 +60,8 @@ Evaluation (`eval_model`) takes a **flat folder of images** via `-d` (not the tr
 | Dataset | Example local path after download |
 |---------|-----------------------------------|
 | Kodak (kodim) | `/data/Dataset/kodim` |
-| Tecnick | `/data/Dataset/tecnick` |
-| CLIC | `/data/Dataset/CLIC` |
+| Tecnick (`T01R01`, 40×1200×1200) | `/data/Dataset/tecnick` |
+| CLIC (2020 professional validation, 41 images) | `/data/Dataset/testdata/CLIC/original` |
 
 ### Pre-trained Model
 
