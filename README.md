@@ -31,18 +31,26 @@ pip install -e '.[dev]'
 
 ### Dataset
 
-| Split | Dataset | Download |
-|-------|---------|----------|
+| Split | Dataset | Notes |
+|-------|---------|-------|
 | Training | [Open Images](https://storage.googleapis.com/openimages/web/index.html) | [Download page](https://storage.googleapis.com/openimages/web/download_v7.html) |
-| Test | [Kodak](https://r0k.us/graphics/kodak/) (24 images, `kodim01.png`–`kodim24.png`) | [Download images](https://r0k.us/graphics/kodak/) |
-| Test | [Tecnick](https://testimages.org/sampling/) TESTIMAGES SAMPLING (40 images, **1200×1200**, 8-bit RGB, shift **`T01R01`**) | [1200×1200 8BIT RGB pack](https://sourceforge.net/projects/testimages/files/SAMPLING/8BIT/RGB/SAMPLING_8BIT_RGB_1200x1200.tar.bz2/download) |
-| Test | [CLIC](https://www.compression.cc/) **2020 professional validation** (41 images, mixed resolution, typically up to 2048 on the long side) | [professional_valid_2020.zip](https://data.vision.ee.ethz.ch/cvl/clic/professional_valid_2020.zip) |
+| Test | [Kodak](https://r0k.us/graphics/kodak/) | 24 images (`kodim01.png`–`kodim24.png`) |
+| Test | [Tecnick](https://testimages.org/sampling/) TESTIMAGES SAMPLING | 40 images, **1200×1200**, 8-bit RGB, shift **`T01R01`** |
+| Test | [CLIC](https://www.compression.cc/) professional validation | 41 images, mixed resolution (folder name on HF: `clic2021_valid`) |
 
-**Tecnick note.** Official reference images are 2400×2400; the pack above is the factor-2 resize to 1200×1200. That archive contains **9 shift folders** (`C00C00`, `T01R01`, `B01C00`, …). We evaluate on the **`T01R01`** subset only (40 PNGs named like `img_1200x1200_3x8bit_T01R01_RGB_*.png`). After download:
+We host the three test sets on Hugging Face: [SCU-VIP-Lab/compression-eval-datasets](https://huggingface.co/datasets/SCU-VIP-Lab/compression-eval-datasets).
 
 ```bash
-tar -xjf SAMPLING_8BIT_RGB_1200x1200.tar.bz2
-# keep only the T01R01 folder (or copy its 40 PNGs into a flat directory for -d)
+hf download SCU-VIP-Lab/compression-eval-datasets --repo-type dataset --local-dir ./compression-eval-datasets
+```
+
+Layout after download:
+
+```
+compression-eval-datasets/
+  kodak/           # 24 images
+  tecnick/         # 40 images (T01R01, 1200×1200)
+  clic2021_valid/  # 41 images (CLIC 2020 professional validation)
 ```
 
 #### Training data structure
@@ -55,13 +63,13 @@ Please put the training data into the right path, or you need to fix `datasets/u
             - img001.png
 
 #### Test data
-Evaluation (`eval_model`) takes a **flat folder of images** via `-d` (not the train `root/train/data` layout). After downloading, point `-d` to the folder that directly contains the PNG/JPG files, for example:
+Evaluation (`eval_model`) takes a **flat folder of images** via `-d` (not the train `root/train/data` layout). After downloading from Hugging Face, point `-d` to the corresponding folder:
 
-| Dataset | Example local path after download |
-|---------|-----------------------------------|
-| Kodak (kodim) | `/data/Dataset/kodim` |
-| Tecnick (`T01R01`, 40×1200×1200) | `/data/Dataset/tecnick` |
-| CLIC (2020 professional validation, 41 images) | `/data/Dataset/testdata/CLIC/original` |
+| Dataset | Path after `hf download` |
+|---------|--------------------------|
+| Kodak | `./compression-eval-datasets/kodak` |
+| Tecnick (`T01R01`) | `./compression-eval-datasets/tecnick` |
+| CLIC (professional validation) | `./compression-eval-datasets/clic2021_valid` |
 
 ### Pre-trained Model
 
@@ -99,10 +107,11 @@ Example (Kodak):
 
 ```bash
 python -m compressai.utils.eval_model \
-  -d /data/Dataset/kodim \
+  -d ./compression-eval-datasets/kodak \
   -a stf8 \
   -p ./checkpoints/save1.ckpt \
   -r ./reconstruction_kodim \
   -v
 ```
 
+Tecnick / CLIC: change `-d` to `./compression-eval-datasets/tecnick` or `./compression-eval-datasets/clic2021_valid`.
